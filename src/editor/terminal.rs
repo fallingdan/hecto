@@ -25,7 +25,7 @@ impl Terminal {
         execute!(stdout, Clear(ClearType::All))
     }
 
-    pub fn draw_rows() -> Result<(), Error> {
+    fn draw_rows() -> Result<(), Error> {
         let mut stdout = stdout();
         let (_, rows) = size()?;
 

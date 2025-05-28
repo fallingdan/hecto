@@ -1,13 +1,9 @@
 mod terminal;
 
-use std::io::{stdout, Error};
+use std::io::Error;
 
-use crossterm::cursor::MoveTo;
 use crossterm::event::{read, Event::Key, KeyCode::Char};
 use crossterm::event::{Event, KeyEvent, KeyModifiers};
-use crossterm::execute;
-use crossterm::style::Print;
-use crossterm::terminal::{disable_raw_mode, enable_raw_mode, size, Clear, ClearType};
 
 use terminal::Terminal;
 
@@ -16,8 +12,8 @@ pub struct Editor {
 }
 
 impl Editor {
-    pub fn default() -> Self {
-        Editor { should_quit: false }
+    pub const fn default() -> Self {
+        Self { should_quit: false }
     }
 
     pub fn run(&mut self) {
