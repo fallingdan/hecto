@@ -12,8 +12,7 @@ pub struct Terminal {}
 impl Terminal {
     pub fn initialize() -> Result<(), Error> {
         _ = enable_raw_mode();
-        Self::clear_screen()?;
-        Self::draw_rows()
+        Self::clear_screen()
     }
 
     pub fn terminate() -> Result<(), Error> {
@@ -25,16 +24,17 @@ impl Terminal {
         execute!(stdout, Clear(ClearType::All))
     }
 
-    fn draw_rows() -> Result<(), Error> {
-        let mut stdout = stdout();
-        let (_, rows) = size()?;
+    pub fn move_cursor_to(column: u16, row: u16) -> Result<(), Error> {
+        execute!(stdout(), MoveTo(column, row))?;
+        Ok(())
+    }
 
-        for row in 1..rows {
-            execute!(stdout, MoveTo(1, row), Print("~"))?;
-        }
+    pub fn get_size() -> Result<(u16, u16), Error> {
+        size()
+    }
 
-        execute!(stdout, MoveTo(1, 1))?;
-
+    pub fn print(text: &str) -> Result<(), Error> {
+        execute!(stdout(), Print(text))?;
         Ok(())
     }
 }

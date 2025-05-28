@@ -61,4 +61,16 @@ impl Editor {
         }
         Ok(())
     }
+
+    fn draw_rows() -> Result<(), Error> {
+        let (_, rows) = Terminal::get_size()?;
+
+        for row in 1..rows {
+            Terminal::move_cursor_to(1, row)?;
+        }
+
+        execute!(stdout, MoveTo(1, 1))?;
+
+        Ok(())
+    }
 }
