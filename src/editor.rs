@@ -25,13 +25,14 @@ impl Editor {
 
     fn repl(&mut self) -> Result<(), Error> {
         loop {
-            let event = read()?;
-            self.evaluate_event(&event);
             self.refresh_screen()?;
 
             if self.should_quit {
                 break;
             }
+
+            let event = read()?;
+            self.evaluate_event(&event);
         }
         Ok(())
     }
