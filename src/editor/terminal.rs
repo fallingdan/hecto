@@ -1,11 +1,21 @@
-use std::io::{stdout, Error};
+use std::io::{stdout, Error, Write};
 
 use crossterm::{
-    cursor::MoveTo,
-    execute,
+    cursor::{Hide, MoveTo, Show},
+    execute, queue,
     style::Print,
     terminal::{disable_raw_mode, enable_raw_mode, size, Clear, ClearType},
 };
+
+pub struct Size {
+    pub width: u16,
+    pub height: u16,
+}
+
+pub struct Position {
+    pub x: u16,
+    pub y: u16,
+}
 
 pub struct Terminal {}
 
@@ -21,20 +31,45 @@ impl Terminal {
 
     pub fn clear_screen() -> Result<(), Error> {
         let mut stdout = stdout();
-        execute!(stdout, Clear(ClearType::All))
-    }
+        queue!(stdout, Clear(ClearType::All))?;
 
-    pub fn move_cursor_to(column: u16, row: u16) -> Result<(), Error> {
-        execute!(stdout(), MoveTo(column, row))?;
+        stdout.flush()?;
+
         Ok(())
     }
 
-    pub fn get_size() -> Result<(u16, u16), Error> {
-        size()
+    pub fn move_cursor_to(position: Position) -> Result<(), Error> {
+        queue!(stdout(), MoveTo(position.x, position.y))?;
+        Ok(())
+    }
+
+    pub fn get_size() -> Result<Size, Error> {
+        let (x, y) = size()?;
+
+        Ok(Size {
+            width: x,
+            height: y,
+        })
     }
 
     pub fn print(text: &str) -> Result<(), Error> {
-        execute!(stdout(), Print(text))?;
+        queue!(stdout(), Print(text))?;
         Ok(())
+    }
+
+    pub fn hide_cursor() -> Result<(), Error> {
+        execute!(stdout(), Hide)?;
+
+        Ok(())
+    }
+
+    pub fn show_cursor() -> Result<(), Error> {
+        execute!(stdout(), Show)?;
+
+        Ok(())
+    }
+
+    pub fn flush() -> Result<(), Error> {
+        stdout().flush()
     }
 }

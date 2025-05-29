@@ -5,7 +5,7 @@ use std::io::Error;
 use crossterm::event::{read, Event::Key, KeyCode::Char};
 use crossterm::event::{Event, KeyEvent, KeyModifiers};
 
-use terminal::Terminal;
+use terminal::{Position, Size, Terminal};
 
 pub struct Editor {
     should_quit: bool,
@@ -55,21 +55,29 @@ impl Editor {
     }
 
     fn refresh_screen(&self) -> Result<(), Error> {
+        Terminal::hide_cursor()?;
+
         if self.should_quit {
             Terminal::clear_screen()?;
-            print!("Goodbye.\r\n");
+            Terminal::print("Goodbye!")?;
+        } else {
+            self.draw_rows()?;
         }
+        Terminal::flush()?;
+
+        Terminal::show_cursor()?;
         Ok(())
     }
 
-    fn draw_rows() -> Result<(), Error> {
-        let (_, rows) = Terminal::get_size()?;
+    fn draw_rows(&self) -> Result<(), Error> {
+        let size = Terminal::get_size()?;
 
-        for row in 1..rows {
-            Terminal::move_cursor_to(1, row)?;
+        for row in 0..size.height {
+            Terminal::move_cursor_to(Position { x: 0, y: row })?;
+            Terminal::print("~")?;
         }
-
-        execute!(stdout, MoveTo(1, 1))?;
+        Terminal::move_cursor_to(Position { x: 0, y: 0 })?;
+        Terminal::flush()?;
 
         Ok(())
     }
