@@ -5,15 +5,20 @@ use std::io::Error;
 use crossterm::event::{read, Event::Key, KeyCode::Char};
 use crossterm::event::{Event, KeyEvent, KeyModifiers};
 
-use terminal::{Position, Size, Terminal};
+use crossterm::terminal::ClearType;
+use terminal::{Position, Terminal};
 
 pub struct Editor {
     should_quit: bool,
+    startup_complete: bool,
 }
 
 impl Editor {
     pub const fn default() -> Self {
-        Self { should_quit: false }
+        Self {
+            should_quit: false,
+            startup_complete: false,
+        }
     }
 
     pub fn run(&mut self) {
@@ -29,6 +34,11 @@ impl Editor {
 
             if self.should_quit {
                 break;
+            }
+
+            if !self.startup_complete {
+                Editor::display_welcome()?;
+                self.startup_complete = true;
             }
 
             let event = read()?;
@@ -61,7 +71,7 @@ impl Editor {
             Terminal::clear_screen()?;
             Terminal::print("Goodbye!")?;
         } else {
-            self.draw_rows()?;
+            Editor::draw_rows()?;
         }
         Terminal::flush()?;
 
@@ -69,15 +79,24 @@ impl Editor {
         Ok(())
     }
 
-    fn draw_rows(&self) -> Result<(), Error> {
+    fn draw_rows() -> Result<(), Error> {
         let size = Terminal::get_size()?;
 
         for row in 0..size.height {
             Terminal::move_cursor_to(Position { x: 0, y: row })?;
+            Terminal::clear(ClearType::CurrentLine)?;
             Terminal::print("~")?;
         }
         Terminal::move_cursor_to(Position { x: 0, y: 0 })?;
         Terminal::flush()?;
+
+        Ok(())
+    }
+
+    fn display_welcome() -> Result<(), Error> {
+        let size = Terminal::get_size()?;
+        let target_row = size.height / 3;
+        dbg!(target_row);
 
         Ok(())
     }

@@ -7,17 +7,19 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, size, Clear, ClearType},
 };
 
+#[derive(Copy, Clone)]
 pub struct Size {
     pub width: u16,
     pub height: u16,
 }
 
+#[derive(Copy, Clone)]
 pub struct Position {
     pub x: u16,
     pub y: u16,
 }
 
-pub struct Terminal {}
+pub struct Terminal;
 
 impl Terminal {
     pub fn initialize() -> Result<(), Error> {
@@ -33,7 +35,14 @@ impl Terminal {
         let mut stdout = stdout();
         queue!(stdout, Clear(ClearType::All))?;
 
-        stdout.flush()?;
+        Terminal::flush()?;
+
+        Ok(())
+    }
+
+    pub fn clear(clear_type: ClearType) -> Result<(), Error> {
+        let mut stdout = stdout();
+        queue!(stdout, Clear(clear_type))?;
 
         Ok(())
     }
