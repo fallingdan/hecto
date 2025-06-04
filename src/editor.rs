@@ -3,13 +3,18 @@ mod terminal;
 use std::io::Error;
 
 use crossterm::event::{read, Event::Key, KeyCode::Char};
-use crossterm::event::{Event, KeyEvent, KeyModifiers};
+use crossterm::event::{Event, KeyEvent, KeyEventKind, KeyModifiers};
 
 use crossterm::terminal::ClearType;
 use terminal::{Position, Terminal};
 
 const NAME: &str = env!("CARGO_PKG_NAME");
 const VERSION: &str = env!("CARGO_PKG_VERSION");
+
+struct Position {
+    row: usize,
+    column: usize,
+}
 
 pub struct Editor {
     should_quit: bool,
@@ -54,11 +59,12 @@ impl Editor {
         if let Key(KeyEvent {
             code,
             modifiers,
-            kind: _,
+            kind: KeyEventKind::Press,
             state: _,
         }) = event
         {
             match code {
+                crossterm::event::KeyCode::Left => {}
                 Char('q') if *modifiers == KeyModifiers::CONTROL => {
                     self.should_quit = true;
                 }
