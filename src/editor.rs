@@ -1,7 +1,9 @@
 mod terminal;
 
+use std::fmt::UpperHex;
 use std::io::Error;
 
+use crossterm::event::KeyCode::{Down, Left, Right, Up};
 use crossterm::event::{read, Event::Key, KeyCode::Char};
 use crossterm::event::{Event, KeyEvent, KeyEventKind, KeyModifiers};
 
@@ -11,7 +13,7 @@ use terminal::{Position, Terminal};
 const NAME: &str = env!("CARGO_PKG_NAME");
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-struct Position {
+struct CursorPosition {
     row: usize,
     column: usize,
 }
@@ -19,6 +21,7 @@ struct Position {
 pub struct Editor {
     should_quit: bool,
     startup_complete: bool,
+    cursor_position: CursorPosition,
 }
 
 impl Editor {
@@ -26,9 +29,12 @@ impl Editor {
         Self {
             should_quit: false,
             startup_complete: false,
+            cursor_position: CursorPosition { row: 0, column: 0 },
         }
     }
 
+    /// Starts the editor
+    /// Handles initialization and teardown
     pub fn run(&mut self) {
         Terminal::initialize().unwrap();
         let result = self.repl();
@@ -36,6 +42,7 @@ impl Editor {
         result.unwrap();
     }
 
+    /// Main Read Eval Print Loop
     fn repl(&mut self) -> Result<(), Error> {
         loop {
             self.refresh_screen()?;
@@ -55,6 +62,7 @@ impl Editor {
         Ok(())
     }
 
+    /// Handle KeyEvents
     fn evaluate_event(&mut self, event: &Event) {
         if let Key(KeyEvent {
             code,
@@ -64,7 +72,7 @@ impl Editor {
         }) = event
         {
             match code {
-                crossterm::event::KeyCode::Left => {}
+                Left | Right | Up | Down => self.handle_cursor_move(event),
                 Char('q') if *modifiers == KeyModifiers::CONTROL => {
                     self.should_quit = true;
                 }
@@ -73,6 +81,27 @@ impl Editor {
         }
     }
 
+    fn handle_cursor_move(&mut self, event: &Event) {
+        if let Key(KeyEvent {
+            code,
+            modifiers,
+            kind,
+            state,
+        }) = event
+        {
+            match code {
+                Left => 
+            }
+        }
+    }
+
+    fn check_cursor_move(&self, desired_position: CursorPosition) -> Result<(), Error> {
+
+
+        Ok(())
+    }
+
+    ///
     fn refresh_screen(&self) -> Result<(), Error> {
         Terminal::hide_cursor()?;
 
