@@ -1,6 +1,5 @@
 mod terminal;
 
-use std::fmt::UpperHex;
 use std::io::Error;
 
 use crossterm::event::KeyCode::{Down, Left, Right, Up};
@@ -13,9 +12,10 @@ use terminal::{Position, Terminal};
 const NAME: &str = env!("CARGO_PKG_NAME");
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
+#[derive(Clone, Copy)]
 struct CursorPosition {
-    row: usize,
-    column: usize,
+    row: u16,
+    column: u16,
 }
 
 pub struct Editor {
@@ -84,32 +84,78 @@ impl Editor {
     fn handle_cursor_move(&mut self, event: &Event) {
         if let Key(KeyEvent {
             code,
-            modifiers,
-            kind,
-            state,
+            modifiers: _,
+            kind: _,
+            state: _,
         }) = event
         {
             match code {
-                Left => 
+                Left => self
+                    .update_cursor_position(CursorPosition {
+                        column: self.cursor_position.column.saturating_sub(1),
+                        ..self.cursor_position
+                    })
+                    .unwrap(),
+                Right => self
+                    .update_cursor_position(CursorPosition {
+                        column: self.cursor_position.column.saturating_add(1),
+                        ..self.cursor_position
+                    })
+                    .unwrap(),
+                Up => self
+                    .update_cursor_position(CursorPosition {
+                        row: self.cursor_position.row.saturating_sub(1),
+                        ..self.cursor_position
+                    })
+                    .unwrap(),
+                Down => self
+                    .update_cursor_position(CursorPosition {
+                        row: self.cursor_position.row.saturating_add(1),
+                        ..self.cursor_position
+                    })
+                    .unwrap(),
+                _ => (),
             }
         }
     }
 
-    fn check_cursor_move(&self, desired_position: CursorPosition) -> Result<(), Error> {
+    fn update_cursor_position(&mut self, desired_position: CursorPosition) -> Result<(), Error> {
+        let valid_move = self.valid_cursor_move(desired_position).unwrap_or(false);
 
+        if valid_move {
+            Terminal::move_cursor_to(Position {
+                x: desired_position.column,
+                y: desired_position.row,
+            })?;
+
+            self.cursor_position = desired_position;
+        }
 
         Ok(())
     }
 
-    ///
+    /// Check if cursor move is within bounds before performing
+    fn valid_cursor_move(&self, desired_position: CursorPosition) -> Result<bool, Error> {
+        let terminal_size = Terminal::get_size()?;
+
+        if desired_position.row >= terminal_size.height.into()
+            || desired_position.column >= terminal_size.width.into()
+        {
+            return Ok(false);
+        }
+
+        Ok(true)
+    }
+
+    /// Execute any queued operations and handle initial states
     fn refresh_screen(&self) -> Result<(), Error> {
         Terminal::hide_cursor()?;
 
         if self.should_quit {
             Terminal::clear_screen()?;
-            Terminal::move_cursor_to(Position { x: 0, y: 0 });
+            Terminal::move_cursor_to(Position { x: 0, y: 0 })?;
             Terminal::print("Goodbye!")?;
-        } else {
+        } else if !self.startup_complete {
             Editor::draw_rows()?;
         }
         Terminal::flush()?;
